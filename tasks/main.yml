@@ -21,7 +21,7 @@
 
 - unarchive:
     src: /tmp/apache-maven.tar.gz
-    dest: /home/vagrant/
+    dest: /home/tinkerware/
 
 - name: Update repositories cache and install java
   apt:
