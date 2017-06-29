@@ -1,15 +1,4 @@
-- name: Install PHP
-  apt:
-    name="{{ item }}"
-    state=present
-  with_items:
-    - php5-fpm
-    - php5
-    - php-pear
-    - php5-mysql
-    - php5-gd
-  sudo: yes
-
+---
 - name: Create destination folder
   file:
     path: "{{ dest }}"
@@ -20,96 +9,22 @@
   sudo: yes
   sudo_user: "{{ server_user }}"
 
-- name: Clone git yii repo
-  git:
-    repo: "{{ repo }}"
+- git:
+    repo: 'https://github.com/spring-guides/gs-maven.git'
     dest: "{{ dest }}"
-    version: "{{ version  }}"
-    update: yes
-    force: yes
-    recursive: yes
-    accept_hostkey: yes
-  sudo: yes
-  sudo_user: "{{ server_user }}"    
-  when: repo is defined
-  tags: update_yii_repo
 
-- name: Add git config repo to update remote
-  command: "git config receive.denyCurrentBranch updateInstead"
-  args:
-    chdir: "{{ dest }}"
+- name: Download apache maven
+  get_url:
+    url: http://www-us.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+    dest: /tmp/apache-maven.tar.gz
+    mode: 0440
 
-- name: Composer | Install
-  command: php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-  args:
-    chdir: "{{ dest }}"
-    creates: "{{ dest }}/composer-setup.php"
-  sudo: yes
-  sudo_user: "{{ server_user }}"
-  tags:
-    - update_yii_repo
+- unarchive:
+    src: /tmp/apache-maven.tar.gz
+    dest: /home/vagrant/
 
-- name: Composer | Setup
-  command: php composer-setup.php
-  args:
-    chdir: "{{ dest }}"
-    creates: "{{ dest }}/composer.phar"
-  sudo: yes
-  sudo_user: "{{ server_user }}"
-  tags:
-    - update_yii_repo
-
-- name: Install Yii2 dependencies 
-  shell: 'php composer.phar global require "fxp/composer-asset-plugin"'
-  args:
-    chdir: "{{ dest }}"
-    creates: "/home/{{ server_user }}/.composer/vendor"
-  sudo: yes
-  sudo_user: "{{ server_user }}"
-  when: repo is defined
-  tags:
-    - update_yii_repo  
-
-- name: Update dependencies for repo. This may take a while . . . . . 
-  shell: "php composer.phar update -n {{ yii_extra_flags }}"
-  args:
-    chdir: "{{ dest }}"
-    creates: "{{ dest }}/vendor" 
-  sudo: yes
-  sudo_user: "{{ server_user }}"
-  retries: 4
-  register: command_result
-  when: repo is defined
-  tags: update_yii_repo
-  ignore_errors: yes
-
-- name: Log dependencies errors if any
-  local_action:
-    module: lineinfile
-    dest: /opt/tinker/shared_files/logs/fail.log
-    line: "{{ ansible_date_time.date }} {{ ansible_date_time.time }} {{ command_result.stdout }}"
-    create: yes
-  when: '"Problem 1" in command_result.stdout'
-  tags:
-    - update_services
-    - update_yii_repo
-  sudo: yes
-  sudo_user: "{{ server_user }}"
-
-- name: Ensure correct folder permissions
-  file:
-    path: "{{ item }}"
-    mode: 0777
-  sudo: yes
-  with_items:
-    - "{{ dest }}/runtime"
-    - "{{ dest }}/web/assets"
-
-- name: Write custom NGINX configuration
-  template:
-    src: vhosts.conf
-    dest: /etc/nginx/sites-enabled/vhosts.conf
-    owner: root
-    group: root
-    mode: 0644
+- name: Update repositories cache and install java
+  apt:
+    name: default-jdk
+    update_cache: yes
   sudo: yes

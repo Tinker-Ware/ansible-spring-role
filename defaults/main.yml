@@ -1,6 +1,4 @@
-cookie_validation_key: pass
-
-repo: https://github.com/Tinker-Ware/yii2-crud.git
-dest: "/opt/tinker/shared_files/project"
-version: master
-yii_extra_flags: "--no-dev"
+---
+dest: "/opt/tinker/shared_files/project/"
+server_user: tinkerware
+server_group: tinkerware
