@@ -10,18 +10,25 @@
   sudo_user: "{{ server_user }}"
 
 - git:
-    repo: 'https://github.com/spring-guides/gs-maven.git'
+    repo: "{{ repo }}"
     dest: "{{ dest }}"
+  sudo: yes
+  sudo_user: "{{ server_user }}"    
 
 - name: Download apache maven
   get_url:
     url: http://www-us.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
     dest: /tmp/apache-maven.tar.gz
     mode: 0440
+  sudo: yes
+  sudo_user: "{{ server_user }}"
 
 - unarchive:
     src: /tmp/apache-maven.tar.gz
     dest: /home/tinkerware/
+    copy: no
+  sudo: yes
+  sudo_user: "{{ server_user }}"
 
 - name: Update repositories cache and install java
   apt:
