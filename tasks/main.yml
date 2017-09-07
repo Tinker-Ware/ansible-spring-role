@@ -1,4 +1,11 @@
 ---
+- name: Update repositories cache and install java
+  apt:
+    name: default-jdk
+    update_cache: yes
+  sudo: yes
+  tags: test
+
 - name: Create destination folder
   file:
     path: "{{ dest }}"
@@ -9,7 +16,8 @@
   sudo: yes
   sudo_user: "{{ server_user }}"
 
-- git:
+- name: Download spring module
+  git:
     repo: "{{ repo }}"
     dest: "{{ dest }}"
   sudo: yes
@@ -22,16 +30,31 @@
     mode: 0440
   sudo: yes
   sudo_user: "{{ server_user }}"
+  tags: test
 
-- unarchive:
+- name: Decompress apache maven
+  unarchive:
     src: /tmp/apache-maven.tar.gz
-    dest: /home/tinkerware/
+    dest: /opt/
     copy: no
+    owner: "{{ server_user }}"
+    group: "{{ server_user }}"
+    mode: 0755
+  sudo: yes
+  sudo_user: root
+
+- name: Add apache maven path
+  shell: touch /etc/profile.d/spring.sh && echo "if [ -d \"/opt/apache-maven-3.5.0/bin\" ]; then" > /etc/profile.d/spring.sh  && echo "  PATH=\"$PATH:/opt/apache-maven-3.5.0/bin/\"" >> /etc/profile.d/spring.sh && echo "fi" >> /etc/profile.d/spring.sh
+  sudo: yes
+
+- name: Download sample project
+  git:
+    repo: "https://github.com/spring-projects/spring-petclinic.git"
+    dest: "/home/{{ server_user }}/samples/spring-petclinic"
   sudo: yes
   sudo_user: "{{ server_user }}"
 
-- name: Update repositories cache and install java
-  apt:
-    name: default-jdk
-    update_cache: yes
+- name: Run sample project
+  shell: . /etc/profile && nohup mvn -f /home/tinkerware/samples/spring-petclinic spring-boot:run > /tmp/maven.log &
   sudo: yes
+  sudo_user: "{{ server_user }}"
