@@ -1,5 +1,6 @@
 ---
-dest: "/opt/tinker/shared_files/project/"
+dest: "/opt/tinker/shared_files/project"
+dest: "/opt/tinker"
 server_user: tinkerware
 server_group: tinkerware
 spring_repo: "https://github.com/spring-projects/spring-petclinic.git"

@@ -26,26 +26,26 @@
 - name: Decompress apache maven
   unarchive:
     src: /tmp/apache-maven.tar.gz
-    dest: /opt/
+    dest: "{{ dest }}/"
     copy: no
     owner: "{{ server_user }}"
     group: "{{ server_user }}"
     mode: 0755
   sudo: yes
-  sudo_user: root
+  sudo_user: "{{ server_user }}"
 
 - name: Add apache maven path
-  shell: touch /etc/profile.d/spring.sh && echo "if [ -d \"/opt/apache-maven-3.5.0/bin\" ]; then" > /etc/profile.d/spring.sh  && echo "  PATH=\"$PATH:/opt/apache-maven-3.5.0/bin/\"" >> /etc/profile.d/spring.sh && echo "fi" >> /etc/profile.d/spring.sh
+  shell: touch /etc/profile.d/spring.sh && echo "if [ -d \"{{ dest }}/apache-maven-3.5.0/bin\" ]; then" > /etc/profile.d/spring.sh  && echo "  PATH=\"$PATH:{{ dest }}/apache-maven-3.5.0/bin/\"" >> /etc/profile.d/spring.sh && echo "fi" >> /etc/profile.d/spring.sh
   sudo: yes
 
 - name: Download spring module
   git:
     repo: "{{ spring_repo }}"
-    dest: "{{ dest }}/{{ spring_repo | basename }}"
+    dest: "{{ project_dest }}/{{ spring_repo | basename }}"
   sudo: yes
   sudo_user: "{{ server_user }}" 
 
 - name: Run project
-  shell: . /etc/profile && nohup mvn -f {{ dest }}/{{ spring_repo | basename }}/ spring-boot:run > /tmp/maven.log &
+  shell: . /etc/profile && nohup mvn -f {{ project_dest }}/{{ spring_repo | basename }}/ spring-boot:run > /tmp/maven.log &
   sudo: yes
   sudo_user: "{{ server_user }}"
