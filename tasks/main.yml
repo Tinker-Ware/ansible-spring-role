@@ -45,7 +45,14 @@
   sudo: yes
   sudo_user: "{{ server_user }}" 
 
+- name: Kill all existing spring services
+  shell: "kill $(pgrep -f spring-boot)"
+  register: command
+  sudo: yes
+  sudo_user: "{{ server_user }}"
+  failed_when: "command.rc==1"
+
 - name: Run project
-  shell: . /etc/profile && nohup mvn -f {{ project_dest }}/{{ spring_repo | basename }}/ spring-boot:run > /tmp/maven.log &
+  shell: . /etc/profile $ && nohup mvn -f {{ project_dest }}/{{ spring_repo | basename }}/ spring-boot:run > /tmp/maven.log &
   sudo: yes
   sudo_user: "{{ server_user }}"
