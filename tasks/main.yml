@@ -43,7 +43,10 @@
     repo: "{{ spring_repo }}"
     dest: "{{ project_dest }}/{{ spring_repo | basename }}"
   sudo: yes
-  sudo_user: "{{ server_user }}" 
+  sudo_user: "{{ server_user }}"
+  tags:
+    - update_services
+    - update_spark_repo
 
 - name: Kill all existing spring services
   shell: "kill $(pgrep -f spring-boot)"
@@ -51,8 +54,14 @@
   sudo: yes
   sudo_user: "{{ server_user }}"
   failed_when: "command.rc==1"
+  tags:
+    - update_services
+    - update_spark_repo
 
 - name: Run project
   shell: . /etc/profile $ && nohup mvn -f {{ project_dest }}/{{ spring_repo | basename }}/ spring-boot:run > /tmp/maven.log &
   sudo: yes
   sudo_user: "{{ server_user }}"
+  tags:
+    - update_services
+    - update_spark_repo
