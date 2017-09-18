@@ -1,4 +1,10 @@
 ---
+- name: Update repositories cache and install java
+  apt:
+    name: default-jdk
+    update_cache: yes
+  sudo: yes
+
 - name: Create destination folder
   file:
     path: "{{ dest }}"
@@ -9,29 +15,53 @@
   sudo: yes
   sudo_user: "{{ server_user }}"
 
-- git:
-    repo: "{{ repo }}"
-    dest: "{{ dest }}"
-  sudo: yes
-  sudo_user: "{{ server_user }}"    
-
 - name: Download apache maven
   get_url:
-    url: http://www-us.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+    url: "{{ package_url }}"
     dest: /tmp/apache-maven.tar.gz
     mode: 0440
   sudo: yes
   sudo_user: "{{ server_user }}"
 
-- unarchive:
+- name: Decompress apache maven
+  unarchive:
     src: /tmp/apache-maven.tar.gz
-    dest: /home/tinkerware/
+    dest: "{{ dest }}/"
     copy: no
+    owner: "{{ server_user }}"
+    group: "{{ server_user }}"
+    mode: 0755
   sudo: yes
   sudo_user: "{{ server_user }}"
 
-- name: Update repositories cache and install java
-  apt:
-    name: default-jdk
-    update_cache: yes
+- name: Add apache maven path
+  shell: touch /etc/profile.d/spring.sh && echo "if [ -d \"{{ dest }}/apache-maven-3.5.0/bin\" ]; then" > /etc/profile.d/spring.sh  && echo "  PATH=\"$PATH:{{ dest }}/apache-maven-3.5.0/bin/\"" >> /etc/profile.d/spring.sh && echo "fi" >> /etc/profile.d/spring.sh
   sudo: yes
+
+- name: Download spring module
+  git:
+    repo: "{{ spring_repo }}"
+    dest: "{{ project_dest }}/{{ spring_repo | basename }}"
+  sudo: yes
+  sudo_user: "{{ server_user }}"
+  tags:
+    - update_services
+    - update_spark_repo
+
+- name: Kill all existing spring services
+  shell: "kill $(pgrep -f spring-boot)"
+  register: command
+  sudo: yes
+  sudo_user: "{{ server_user }}"
+  failed_when: "command.rc==1"
+  tags:
+    - update_services
+    - update_spark_repo
+
+- name: Run project
+  shell: . /etc/profile $ && nohup mvn -f {{ project_dest }}/{{ spring_repo | basename }}/ spring-boot:run > /tmp/maven.log &
+  sudo: yes
+  sudo_user: "{{ server_user }}"
+  tags:
+    - update_services
+    - update_spark_repo
