@@ -1,5 +1,5 @@
 ---
-dest: "/opt/tinker/shared_files/project"
+project_dest: "/opt/tinker/shared_files/project"
 dest: "/opt/tinker"
 server_user: tinkerware
 server_group: tinkerware
