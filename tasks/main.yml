@@ -37,6 +37,8 @@
 - name: Add apache maven path
   shell: touch /etc/profile.d/spring.sh && echo "if [ -d \"{{ dest }}/apache-maven-3.5.0/bin\" ]; then" > /etc/profile.d/spring.sh  && echo "  PATH=\"$PATH:{{ dest }}/apache-maven-3.5.0/bin/\"" >> /etc/profile.d/spring.sh && echo "fi" >> /etc/profile.d/spring.sh
   sudo: yes
+  args:
+    creates: /etc/profile.d/spring.sh
 
 - name: Download spring module
   git:
@@ -59,7 +61,7 @@
     - update_spark_repo
 
 - name: Run project
-  shell: . /etc/profile $ && nohup mvn -f {{ project_dest }}/{{ spring_repo | basename }}/ spring-boot:run > /tmp/maven.log &
+  shell: ". /etc/profile $ && nohup mvn -f {{ project_dest }}/{{ spring_repo | basename }}/ spring-boot:run > /tmp/maven.log &"
   sudo: yes
   sudo_user: "{{ server_user }}"
   tags:
